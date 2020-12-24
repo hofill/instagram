@@ -1,24 +1,24 @@
 <div class="limiter">
   <div class="container-form">
     <div class="wrap-form">
-      <form class="form-form">
+      <form class="form-form" (ngSubmit)="onSubmit(f)" #f="ngForm">
         <span class="form-form-title">
           Instagram Login
         </span>
         <div class="wrap-input-form validate-input">
-          <input class="input-form" type="text" name="email" placeholder="Username / E-mail">
+          <input class="input-form" type="text" name="email" placeholder="Username / E-mail" ngModel>
           <span class="focus-input-form" data-placeholder="Email"></span>
         </div>
 
         <div class="wrap-input-form validate-input">
-          <input class="input-form" type="password" name="pass" placeholder="Password">
+          <input class="input-form" type="password" name="pass" placeholder="Password" ngModel>
           <span class="focus-input-form"></span>
         </div>
 
         <div class="container-form-form-btn">
           <div class="wrap-form-form-btn">
             <div class="form-form-bgbtn"></div>
-            <button class="form-form-btn" (click)="checkData()">
+            <button class="form-form-btn" type="submit">
               Login
             </button>
           </div>

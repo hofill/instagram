@@ -37,7 +37,8 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.InstagramAPI = void 0;
-var puppeteer = require("puppeteer-extra");
+var puppeteer = require("puppeteer");
+var pup = require("puppeteer-extra");
 var puppeteer_stealth = require("puppeteer-extra-plugin-stealth");
 var InstagramAPI = /** @class */ (function () {
     function InstagramAPI() {
@@ -64,10 +65,10 @@ var InstagramAPI = /** @class */ (function () {
             return __generator(this, function (_c) {
                 switch (_c.label) {
                     case 0:
-                        puppeteer.use(puppeteer_stealth());
+                        pup.use(puppeteer_stealth());
                         this.browserOptions.executablePath = puppeteer.executablePath();
                         _a = this;
-                        return [4 /*yield*/, puppeteer.launch(this.browserOptions)];
+                        return [4 /*yield*/, pup.launch(this.browserOptions)];
                     case 1:
                         _a.browser = _c.sent();
                         _b = this;
@@ -81,7 +82,7 @@ var InstagramAPI = /** @class */ (function () {
     };
     InstagramAPI.prototype.login = function (username, password) {
         return __awaiter(this, void 0, void 0, function () {
-            var loginData, cookieButton, loginButton;
+            var loginData, cookieButton, loginButton, pageData, regexUsername, pageUsername;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -131,10 +132,18 @@ var InstagramAPI = /** @class */ (function () {
                     case 11:
                         loginButton = _a.sent();
                         loginButton[0].click();
-                        return [4 /*yield*/, this.page.on('load', function (data) {
-                                console.log(data);
-                            })];
+                        return [4 /*yield*/, this.page.waitForXPath("//img[@data-testid='user-avatar']")];
                     case 12:
+                        _a.sent();
+                        return [4 /*yield*/, this.page.content()];
+                    case 13:
+                        pageData = _a.sent();
+                        regexUsername = /<img alt="([a-z0-9_\-.]{2,30})'s profile picture"/g;
+                        pageUsername = regexUsername.exec(pageData);
+                        // console.log(pageUsername[1]);
+                        return [4 /*yield*/, this.page.goto("https://instagram.com/" + pageUsername[1])];
+                    case 14:
+                        // console.log(pageUsername[1]);
                         _a.sent();
                         return [2 /*return*/];
                 }

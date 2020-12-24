@@ -55,7 +55,7 @@ function createWindow(): BrowserWindow {
   return loginWindow;
 }
 
-ipcMain.on('login_successful', () => {
+ipcMain.on('login_successful', (event, args) => {
   win = new BrowserWindow({
     width: 1120,
     height: 630,
@@ -70,7 +70,7 @@ ipcMain.on('login_successful', () => {
   win.loadURL('http://localhost:4200/');
   loginWindow.close();
   const api = new InstagramAPI();
-  api.login("testusername", "testpw");
+  api.login(args.email, args.password);
 });
 
 try {

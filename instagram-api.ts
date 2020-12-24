@@ -1,4 +1,5 @@
-const puppeteer = require("puppeteer-extra");
+import * as puppeteer from 'puppeteer';
+const pup = require("puppeteer-extra");
 const puppeteer_stealth = require("puppeteer-extra-plugin-stealth");
 
 export class InstagramAPI {
@@ -26,9 +27,9 @@ export class InstagramAPI {
 
   // let loginCookies = {};
   async startPuppeteer(): Promise<void> {
-    puppeteer.use(puppeteer_stealth());
+    pup.use(puppeteer_stealth());
     this.browserOptions.executablePath = puppeteer.executablePath();
-    this.browser = await puppeteer.launch(this.browserOptions);
+    this.browser = await pup.launch(this.browserOptions);
     this.page = await this.browser.newPage();
   }
 
@@ -68,6 +69,13 @@ export class InstagramAPI {
 
     const loginButton = await this.page.$x("//button[@type='submit']");
     loginButton[0].click();
+
+    await this.page.waitForXPath("//img[@data-testid='user-avatar']");
+    const pageData = await this.page.content();
+    const regexUsername = /<img alt="([a-z0-9_\-.]{2,30})'s profile picture"/g;
+    const pageUsername = regexUsername.exec(pageData);
+    // console.log(pageUsername[1]);
+    await this.page.goto("https://instagram.com/" + pageUsername[1]);
 
   }
 
