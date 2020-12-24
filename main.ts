@@ -1,6 +1,7 @@
 import { app, BrowserWindow, screen, ipcMain } from 'electron';
 import * as path from 'path';
 import * as url from 'url';
+import { InstagramAPI } from './instagram-api';
 
 let win: BrowserWindow = null;
 let loginWindow: BrowserWindow = null;
@@ -68,6 +69,8 @@ ipcMain.on('login_successful', () => {
   win.resizable = false;
   win.loadURL('http://localhost:4200/');
   loginWindow.close();
+  const api = new InstagramAPI();
+  api.login("testusername", "testpw");
 });
 
 try {

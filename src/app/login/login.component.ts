@@ -13,6 +13,9 @@ export class LoginComponent implements OnInit {
   }
 
   checkData() {
-
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    const ipcRenderer = window.require('electron').ipcRenderer;
+    ipcRenderer.send('login_successful');
   }
 }
