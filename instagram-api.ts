@@ -1,4 +1,6 @@
 import * as puppeteer from 'puppeteer';
+import fs from 'fs';
+import { UserData } from "./src/assets/InstagramUser";
 const pup = require("puppeteer-extra");
 const puppeteer_stealth = require("puppeteer-extra-plugin-stealth");
 
@@ -21,8 +23,16 @@ export class InstagramAPI {
         '--enable-features=NetworkService',
         '--allow-running-insecure-content',
         '--disable-web-security',
-      ]
+      ],
     };
+  }
+
+  async readUsers(): Promise<UserData> {
+    return;
+  }
+
+  async writeUser(): Promise<boolean> {
+    return true;
   }
 
   // let loginCookies = {};
@@ -31,6 +41,19 @@ export class InstagramAPI {
     this.browserOptions.executablePath = puppeteer.executablePath();
     this.browser = await pup.launch(this.browserOptions);
     this.page = await this.browser.newPage();
+  }
+
+  async isLoggedIn(name: string): Promise<boolean> {
+    // const userDataPath = (electron.app || electron.remote.app).getPath('userData');
+    await fs.readFile("/user_data/login_cookies.txt", "utf8", (err, data) => {
+      if(err) {
+        return false;
+      } else {
+        const JSONData = JSON.parse(data);
+        console.log(JSONData);
+      }
+    });
+    return true;
   }
 
   async login(username: string, password: string): Promise<void> {
@@ -54,6 +77,9 @@ export class InstagramAPI {
       waitUntil: "networkidle2"
     });
 
+    // await this.page.setCookie(...cookiesGiven);
+    // await this.page.reload();
+
     await this.page.waitForXPath("//button[.='Accept']");
 
     const cookieButton = await this.page.$x("//button[.='Accept']");
@@ -76,6 +102,14 @@ export class InstagramAPI {
     const pageUsername = regexUsername.exec(pageData);
     // console.log(pageUsername[1]);
     await this.page.goto("https://instagram.com/" + pageUsername[1]);
+
+    this.page.on('response', response => {
+      if(response.request.resourceType == 'xhr') {
+        console.log(response.body);
+      }
+    });
+
+    console.log(await this.page.cookies());
 
   }
 
