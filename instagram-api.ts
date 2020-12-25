@@ -1,6 +1,9 @@
 import * as puppeteer from 'puppeteer';
 import fs from 'fs';
 import { UserData } from "./src/assets/InstagramUser";
+import path from 'path';
+import * as electron from "electron";
+
 const pup = require("puppeteer-extra");
 const puppeteer_stealth = require("puppeteer-extra-plugin-stealth");
 
@@ -10,6 +13,9 @@ export class InstagramAPI {
   page: any = null;
   browserOptions: any;
   loginURL = "https://www.instagram.com/accounts/login/?next=%2Flogin%2F&source=desktop_nav";
+  userDataPath: any = (electron.app || electron.remote.app).getPath('userData');
+  userFile: any = path.join(this.userDataPath, "users.json");
+
 
   constructor() {
 
@@ -27,11 +33,32 @@ export class InstagramAPI {
     };
   }
 
-  async readUsers(): Promise<UserData> {
-    return;
+  //:TODO change promise type
+  async readUsers(): Promise<any> {
+    await fs.readFile(this.userFile, "utf8", (err, data) => {
+      if (err) {
+        return false;
+      } else {
+        const JSONData = JSON.parse(data);
+        console.log(JSONData);
+      }
+    });
   }
 
-  async writeUser(): Promise<boolean> {
+  async isSavedUser(username: string): Promise<boolean> {
+    const allUsers = await this.readUsers();
+    for(const user of allUsers) {
+      if(user.username == username) return false;
+    }
+    return true;
+  }
+
+  //:TODO change to append to json, then write all to file
+  async writeUser(userData: UserData): Promise<boolean> {
+    const userJSON = JSON.stringify(userData);
+    await fs.appendFile(this.userFile, userJSON, "utf8", () => {
+      return false;
+    });
     return true;
   }
 
@@ -43,18 +70,11 @@ export class InstagramAPI {
     this.page = await this.browser.newPage();
   }
 
-  async isLoggedIn(name: string): Promise<boolean> {
-    // const userDataPath = (electron.app || electron.remote.app).getPath('userData');
-    await fs.readFile("/user_data/login_cookies.txt", "utf8", (err, data) => {
-      if(err) {
-        return false;
-      } else {
-        const JSONData = JSON.parse(data);
-        console.log(JSONData);
-      }
-    });
-    return true;
-  }
+  // async isLoggedIn(name: string): Promise<boolean> {
+  //   // const userDataPath = (electron.app || electron.remote.app).getPath('userData');
+  //
+  //   return true;
+  // }
 
   async login(username: string, password: string): Promise<void> {
     // not needed, i just love objects
@@ -104,7 +124,7 @@ export class InstagramAPI {
     await this.page.goto("https://instagram.com/" + pageUsername[1]);
 
     this.page.on('response', response => {
-      if(response.request.resourceType == 'xhr') {
+      if (response.request.resourceType == 'xhr') {
         console.log(response.body);
       }
     });
