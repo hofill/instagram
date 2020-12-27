@@ -53,7 +53,7 @@ export class InstagramAPI {
     return true;
   }
 
-  //:TODO change to append to json, then write all to file
+  //:TODO change to append to json, then write everything to file
   async writeUser(userData: UserData): Promise<boolean> {
     const userJSON = JSON.stringify(userData);
     await fs.appendFile(this.userFile, userJSON, "utf8", () => {
