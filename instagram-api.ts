@@ -25,45 +25,44 @@ export class InstagramAPI {
     };
   }
 
-  //:TODO change return type
-  readUsers(): any {
+  readUsers(): UserData[] {
+    const allUsers: UserData[] = [];
     fs.readFile(this.userFile, "utf8", (err, data) => {
       if (err) {
-        return false;
+        return null;
       } else {
         const JSONData = JSON.parse(data);
-        const allUsers: UserData[] = [];
         for (const user of JSONData['users']) {
           const userAdded = new UserData(null, null, null);
           userAdded.applySelf(user);
           allUsers.push(userAdded);
         }
-        return allUsers;
       }
     });
+    return allUsers;
   }
 
   isSavedUser(username: string): boolean {
     const allUsers = this.readUsers();
     if (!allUsers) return false;
-    for(const user of allUsers) {
-      if(user.username == username) return false;
+    for (const user of allUsers) {
+      if (user.username === username) return false;
     }
     return true;
   }
 
-  //:TODO change to append to JSON, then write everything to file
   writeUser(userData: UserData): boolean {
-    const userJSON = JSON.stringify(userData);
-    let allUsers = this.readUsers();
-    if (!allUsers) return false;
-    fs.writeFile(this.userFile, userJSON, "utf8", () => {
+    if (this.isSavedUser(userData.username)) return false;
+    let allUsers: UserData[] = this.readUsers();
+    if (!allUsers) allUsers = [];
+    allUsers.push(userData);
+    const allUsersObject = { "users": allUsers };
+    fs.writeFile(this.userFile, JSON.stringify(allUsersObject), "utf8", () => {
       return false;
     });
     return true;
   }
 
-  // let loginCookies = {};
   async startPuppeteer(): Promise<void> {
     pup.use(puppeteer_stealth());
     this.browserOptions.executablePath = puppeteer.executablePath();
@@ -83,9 +82,6 @@ export class InstagramAPI {
       username: username,
       password: password
     };
-
-    this.readUsers();
-    return;
 
     if (!this.page) {
       console.log("starting puppeteer");
