@@ -32,13 +32,20 @@ export class InstagramAPI {
         return false;
       } else {
         const JSONData = JSON.parse(data);
-        console.log(JSONData);
+        const allUsers: UserData[] = [];
+        for (const user of JSONData['users']) {
+          const userAdded = new UserData(null, null, null);
+          userAdded.applySelf(user);
+          allUsers.push(userAdded);
+        }
+        return allUsers;
       }
     });
   }
 
   isSavedUser(username: string): boolean {
     const allUsers = this.readUsers();
+    if (!allUsers) return false;
     for(const user of allUsers) {
       if(user.username == username) return false;
     }
@@ -49,6 +56,7 @@ export class InstagramAPI {
   writeUser(userData: UserData): boolean {
     const userJSON = JSON.stringify(userData);
     let allUsers = this.readUsers();
+    if (!allUsers) return false;
     fs.writeFile(this.userFile, userJSON, "utf8", () => {
       return false;
     });
@@ -77,6 +85,7 @@ export class InstagramAPI {
     };
 
     this.readUsers();
+    return;
 
     if (!this.page) {
       console.log("starting puppeteer");

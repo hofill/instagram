@@ -1,11 +1,15 @@
 export class UserData {
   username: string;
-  cookies: object[];
+  cookies: Record<string, unknown>[];
   unfollowed: Follower[];
-  constructor(username: string, cookies:object[], unfollowed:Follower[]) {
+  constructor(username: string, cookies: Record<string, unknown>[], unfollowed:Follower[]) {
     this.username = username;
     this.cookies = cookies;
     this. unfollowed = unfollowed;
+  }
+
+  applySelf(json: JSON): void {
+    Object.assign(this, json);
   }
 }
 
