@@ -1,7 +1,7 @@
 import * as puppeteer from 'puppeteer';
-import fs from 'fs';
+import * as fs from 'fs';
 import { UserData } from "./src/assets/InstagramUser";
-import path from 'path';
+import * as path from 'path';
 import * as electron from "electron";
 
 const pup = require("puppeteer-extra");
@@ -22,20 +22,12 @@ export class InstagramAPI {
     this.browserOptions = {
       headless: false,
       devtools: false,
-      ignoreHTTPSErrors: true,
-      args: [
-        '--no-sandbox',
-        '--ignore-certificate-errors',
-        '--enable-features=NetworkService',
-        '--allow-running-insecure-content',
-        '--disable-web-security',
-      ],
     };
   }
 
-  //:TODO change promise type
-  async readUsers(): Promise<any> {
-    await fs.readFile(this.userFile, "utf8", (err, data) => {
+  //:TODO change return type
+  readUsers(): any {
+    fs.readFile(this.userFile, "utf8", (err, data) => {
       if (err) {
         return false;
       } else {
@@ -45,18 +37,19 @@ export class InstagramAPI {
     });
   }
 
-  async isSavedUser(username: string): Promise<boolean> {
-    const allUsers = await this.readUsers();
+  isSavedUser(username: string): boolean {
+    const allUsers = this.readUsers();
     for(const user of allUsers) {
       if(user.username == username) return false;
     }
     return true;
   }
 
-  //:TODO change to append to json, then write everything to file
-  async writeUser(userData: UserData): Promise<boolean> {
+  //:TODO change to append to JSON, then write everything to file
+  writeUser(userData: UserData): boolean {
     const userJSON = JSON.stringify(userData);
-    await fs.appendFile(this.userFile, userJSON, "utf8", () => {
+    let allUsers = this.readUsers();
+    fs.writeFile(this.userFile, userJSON, "utf8", () => {
       return false;
     });
     return true;
@@ -82,6 +75,8 @@ export class InstagramAPI {
       username: username,
       password: password
     };
+
+    this.readUsers();
 
     if (!this.page) {
       console.log("starting puppeteer");
@@ -123,13 +118,14 @@ export class InstagramAPI {
     // console.log(pageUsername[1]);
     await this.page.goto("https://instagram.com/" + pageUsername[1]);
 
+
+    // const userData = new UserData(pageUsername[1], await this.page.cookies(), null);
+
     this.page.on('response', response => {
       if (response.request.resourceType == 'xhr') {
         console.log(response.body);
       }
     });
-
-    console.log(await this.page.cookies());
 
   }
 
