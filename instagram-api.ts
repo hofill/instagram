@@ -1,5 +1,5 @@
 import * as puppeteer from 'puppeteer';
-import * as fs from 'fs';
+const fs = require('fs');
 import { UserData } from "./src/assets/InstagramUser";
 import * as path from 'path';
 import * as electron from "electron";
@@ -27,18 +27,19 @@ export class InstagramAPI {
 
   readUsers(): UserData[] {
     const allUsers: UserData[] = [];
-    fs.readFile(this.userFile, "utf8", (err, data) => {
-      if (err) {
-        return null;
-      } else {
-        const JSONData = JSON.parse(data);
-        for (const user of JSONData['users']) {
-          const userAdded = new UserData(null, null, null);
-          userAdded.applySelf(user);
-          allUsers.push(userAdded);
-        }
-      }
-    });
+    let JSONData: JSON = null;
+    let data;
+    try {
+      data = fs.readFileSync(this.userFile, "utf8");
+    } catch (err) {
+      return allUsers;
+    }
+    JSONData = JSON.parse(data);
+    for (const user of JSONData['users']) {
+      const userAdded = new UserData(null, null, null);
+      userAdded.applySelf(user);
+      allUsers.push(userAdded);
+    }
     return allUsers;
   }
 
@@ -57,9 +58,11 @@ export class InstagramAPI {
     if (!allUsers) allUsers = [];
     allUsers.push(userData);
     const allUsersObject = { "users": allUsers };
-    fs.writeFile(this.userFile, JSON.stringify(allUsersObject), "utf8", () => {
+    try {
+      fs.writeFileSync(this.userFile, JSON.stringify(allUsersObject), "utf8");
+    } catch (err) {
       return false;
-    });
+    }
     return true;
   }
 
@@ -76,7 +79,7 @@ export class InstagramAPI {
   //   return true;
   // }
 
-  async login(username: string, password: string): Promise<void> {
+  async login(username: string, password: string, isLoggedIn = false, user = null): Promise<void> {
     // not needed, i just love objects
     const loginData = {
       username: username,
