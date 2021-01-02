@@ -1,0 +1,35 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+//--------------------------------------
+
+
+.limiter {
+  width: 100%;
+  margin: 0 auto;
+  overflow: hidden;
+}
+
+.container-form {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  padding: 15px;
+  background: #f2f2f2;
+}
+
+.wrap-form {
+  width: 390px;
+  background: #fff;
+  border-radius: 10px;
+  overflow: hidden;
+  padding: 22px;
+
+  box-shadow: 0 5px 10px 0 rgba(0, 0, 0, 0.1);
+}

@@ -79,62 +79,64 @@ export class InstagramAPI {
   //   return true;
   // }
 
-  async login(username: string, password: string, isLoggedIn = false, user = null): Promise<void> {
+  async login(username: string, password: string, isLoggedIn = false, user = null): Promise<boolean> {
     // not needed, i just love objects
     const loginData = {
       username: username,
       password: password
     };
-
-    if (!this.page) {
-      console.log("starting puppeteer");
-      await this.startPuppeteer();
-    }
-
-    if (!this.page) {
-      console.log("failed to load puppeteer");
-      return;
-    }
-
-    await this.page.goto(this.loginURL, {
-      waitUntil: "networkidle2"
-    });
-
     // await this.page.setCookie(...cookiesGiven);
     // await this.page.reload();
-
-    await this.page.waitForXPath("//button[.='Accept']");
-
-    const cookieButton = await this.page.$x("//button[.='Accept']");
-    cookieButton[0].click();
-
-    await this.page.waitForTimeout(1000);
-
-    await this.page.waitForSelector("input[name=username]");
-    await this.page.type("input[name=username]", loginData.username);
-
-    await this.page.waitForTimeout(100);
-    await this.page.type("input[name=password]", loginData.password);
-
-    const loginButton = await this.page.$x("//button[@type='submit']");
-    loginButton[0].click();
-
-    await this.page.waitForXPath("//img[@data-testid='user-avatar']");
-    const pageData = await this.page.content();
-    const regexUsername = /<img alt="([a-z0-9_\-.]{2,30})'s profile picture"/g;
-    const pageUsername = regexUsername.exec(pageData);
-    // console.log(pageUsername[1]);
-    await this.page.goto("https://instagram.com/" + pageUsername[1]);
-
-
-    // const userData = new UserData(pageUsername[1], await this.page.cookies(), null);
-
-    this.page.on('response', response => {
-      if (response.request.resourceType == 'xhr') {
-        console.log(response.body);
+    if (!isLoggedIn) {
+      if (!this.page) {
+        console.log("starting puppeteer");
+        await this.startPuppeteer();
+        if (!this.page) {
+          console.log("failed to load puppeteer");
+          return false;
+        }
       }
-    });
 
+      await this.page.goto(this.loginURL, {
+        waitUntil: "networkidle2",
+      });
+
+      await this.page.waitForXPath("//button[.='Accept']");
+
+      const cookieButton = await this.page.$x("//button[.='Accept']");
+      cookieButton[0].click();
+
+      await this.page.waitForTimeout(1000);
+
+      await this.page.waitForSelector("input[name=username]");
+      await this.page.type("input[name=username]", loginData.username);
+
+      await this.page.waitForTimeout(100);
+      await this.page.type("input[name=password]", loginData.password);
+
+      const loginButton = await this.page.$x("//button[@type='submit']");
+      loginButton[0].click();
+
+      try {
+        await this.page.waitForXPath("//img[@data-testid='user-avatar']");
+      } catch (err) {
+        return false;
+      }
+      const pageData = await this.page.content();
+      const regexUsername = /<img alt="([a-z0-9_\-.]{2,30})'s profile picture"/g;
+      const pageUsername = regexUsername.exec(pageData);
+      await this.page.goto("https://instagram.com/" + pageUsername[1]);
+
+      const userData = new UserData(pageUsername[1], await this.page.cookies(), null);
+
+      this.page.on('response', async (response) => {
+        // if (response.resourceType == 'xhr') {
+        console.log(await response.text());
+        // }
+
+      });
+
+    }
   }
 
 
