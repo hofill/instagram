@@ -71,7 +71,7 @@ ipcMain.on('login_successful', (event, args) => {
   win.resizable = false;
   win.loadURL('http://localhost:4200/');
   loginWindow.close();
-  api.login(args.email, args.password);
+  api.login(args.email, args.password, true, "");
 });
 
 ipcMain.handle('get_accounts',  () => {

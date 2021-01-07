@@ -49,6 +49,7 @@ var InstagramAPI = /** @class */ (function () {
         this.browser = null;
         this.page = null;
         this.loginURL = "https://www.instagram.com/accounts/login/?next=%2Flogin%2F&source=desktop_nav";
+        this.profileURL = "https://www.instagram.com/";
         this.userDataPath = (electron.app || electron.remote.app).getPath('userData');
         this.userFile = path.join(this.userDataPath, "users.json");
         this.browserOptions = {
@@ -85,6 +86,15 @@ var InstagramAPI = /** @class */ (function () {
                 return false;
         }
         return true;
+    };
+    InstagramAPI.prototype.getUserData = function (username) {
+        for (var _i = 0, _a = this.readUsers(); _i < _a.length; _i++) {
+            var currentUser = _a[_i];
+            if (currentUser.username == username) {
+                return currentUser;
+            }
+        }
+        return null;
     };
     InstagramAPI.prototype.writeUser = function (userData) {
         if (this.isSavedUser(userData.username))
@@ -132,80 +142,78 @@ var InstagramAPI = /** @class */ (function () {
         if (isLoggedIn === void 0) { isLoggedIn = false; }
         if (user === void 0) { user = null; }
         return __awaiter(this, void 0, void 0, function () {
-            var loginData, cookieButton, loginButton, err_1, pageData, regexUsername, pageUsername, userData, _a, _b;
+            var loginData, cookieButton, loginButton, err_1, pageData, regexUsername, pageUsername, userData;
+            var _a;
             var _this = this;
-            return __generator(this, function (_c) {
-                switch (_c.label) {
+            return __generator(this, function (_b) {
+                switch (_b.label) {
                     case 0:
                         loginData = {
                             username: username,
                             password: password
                         };
-                        if (!!isLoggedIn) return [3 /*break*/, 19];
                         if (!!this.page) return [3 /*break*/, 2];
                         console.log("starting puppeteer");
                         return [4 /*yield*/, this.startPuppeteer()];
                     case 1:
-                        _c.sent();
+                        _b.sent();
                         if (!this.page) {
                             console.log("failed to load puppeteer");
                             return [2 /*return*/, false];
                         }
-                        _c.label = 2;
-                    case 2: return [4 /*yield*/, this.page.goto(this.loginURL, {
-                            waitUntil: "networkidle2",
-                        })];
+                        _b.label = 2;
+                    case 2:
+                        if (!!isLoggedIn) return [3 /*break*/, 18];
+                        return [4 /*yield*/, this.page.goto(this.loginURL, {
+                                waitUntil: "networkidle2",
+                            })];
                     case 3:
-                        _c.sent();
+                        _b.sent();
                         return [4 /*yield*/, this.page.waitForXPath("//button[.='Accept']")];
                     case 4:
-                        _c.sent();
+                        _b.sent();
                         return [4 /*yield*/, this.page.$x("//button[.='Accept']")];
                     case 5:
-                        cookieButton = _c.sent();
+                        cookieButton = _b.sent();
                         cookieButton[0].click();
                         return [4 /*yield*/, this.page.waitForTimeout(1000)];
                     case 6:
-                        _c.sent();
+                        _b.sent();
                         return [4 /*yield*/, this.page.waitForSelector("input[name=username]")];
                     case 7:
-                        _c.sent();
+                        _b.sent();
                         return [4 /*yield*/, this.page.type("input[name=username]", loginData.username)];
                     case 8:
-                        _c.sent();
+                        _b.sent();
                         return [4 /*yield*/, this.page.waitForTimeout(100)];
                     case 9:
-                        _c.sent();
+                        _b.sent();
                         return [4 /*yield*/, this.page.type("input[name=password]", loginData.password)];
                     case 10:
-                        _c.sent();
+                        _b.sent();
                         return [4 /*yield*/, this.page.$x("//button[@type='submit']")];
                     case 11:
-                        loginButton = _c.sent();
+                        loginButton = _b.sent();
                         loginButton[0].click();
-                        _c.label = 12;
+                        _b.label = 12;
                     case 12:
-                        _c.trys.push([12, 14, , 15]);
+                        _b.trys.push([12, 14, , 15]);
                         return [4 /*yield*/, this.page.waitForXPath("//img[@data-testid='user-avatar']")];
                     case 13:
-                        _c.sent();
+                        _b.sent();
                         return [3 /*break*/, 15];
                     case 14:
-                        err_1 = _c.sent();
+                        err_1 = _b.sent();
                         return [2 /*return*/, false];
                     case 15: return [4 /*yield*/, this.page.content()];
                     case 16:
-                        pageData = _c.sent();
+                        pageData = _b.sent();
                         regexUsername = /<img alt="([a-z0-9_\-.]{2,30})'s profile picture"/g;
                         pageUsername = regexUsername.exec(pageData);
                         return [4 /*yield*/, this.page.goto("https://instagram.com/" + pageUsername[1])];
                     case 17:
-                        _c.sent();
-                        _a = InstagramUser_1.UserData.bind;
-                        _b = [void 0, pageUsername[1]];
-                        return [4 /*yield*/, this.page.cookies()];
-                    case 18:
-                        userData = new (_a.apply(InstagramUser_1.UserData, _b.concat([_c.sent(), null])))();
+                        _b.sent();
+                        // const userData = new UserData(pageUsername[1], await this.page.cookies(), null);
                         this.page.on('response', function (response) { return __awaiter(_this, void 0, void 0, function () {
                             var _a, _b;
                             return __generator(this, function (_c) {
@@ -221,8 +229,19 @@ var InstagramAPI = /** @class */ (function () {
                                 }
                             });
                         }); });
-                        _c.label = 19;
-                    case 19: return [2 /*return*/];
+                        return [3 /*break*/, 21];
+                    case 18:
+                        userData = this.getUserData(user);
+                        return [4 /*yield*/, (_a = this.page).setCookie.apply(_a, userData.cookies)];
+                    case 19:
+                        _b.sent();
+                        return [4 /*yield*/, this.page.goto(this.profileURL + userData.username, {
+                                waitUntil: "networkidle2",
+                            })];
+                    case 20:
+                        _b.sent();
+                        _b.label = 21;
+                    case 21: return [2 /*return*/];
                 }
             });
         });

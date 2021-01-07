@@ -13,6 +13,7 @@ export class InstagramAPI {
   page: any = null;
   browserOptions: any;
   loginURL = "https://www.instagram.com/accounts/login/?next=%2Flogin%2F&source=desktop_nav";
+  profileURL = "https://www.instagram.com/";
   userDataPath: any = (electron.app || electron.remote.app).getPath('userData');
   userFile: any = path.join(this.userDataPath, "users.json");
 
@@ -52,6 +53,15 @@ export class InstagramAPI {
     return true;
   }
 
+  getUserData(username: string): UserData {
+    for(const currentUser of this.readUsers()) {
+      if(currentUser.username == username) {
+        return currentUser;
+      }
+    }
+    return null;
+  }
+
   writeUser(userData: UserData): boolean {
     if (this.isSavedUser(userData.username)) return false;
     let allUsers: UserData[] = this.readUsers();
@@ -87,16 +97,15 @@ export class InstagramAPI {
     };
     // await this.page.setCookie(...cookiesGiven);
     // await this.page.reload();
-    if (!isLoggedIn) {
+    if (!this.page) {
+      console.log("starting puppeteer");
+      await this.startPuppeteer();
       if (!this.page) {
-        console.log("starting puppeteer");
-        await this.startPuppeteer();
-        if (!this.page) {
-          console.log("failed to load puppeteer");
-          return false;
-        }
+        console.log("failed to load puppeteer");
+        return false;
       }
-
+    }
+    if (!isLoggedIn) {
       await this.page.goto(this.loginURL, {
         waitUntil: "networkidle2",
       });
@@ -127,7 +136,7 @@ export class InstagramAPI {
       const pageUsername = regexUsername.exec(pageData);
       await this.page.goto("https://instagram.com/" + pageUsername[1]);
 
-      const userData = new UserData(pageUsername[1], await this.page.cookies(), null);
+      // const userData = new UserData(pageUsername[1], await this.page.cookies(), null);
 
       this.page.on('response', async (response) => {
         // if (response.resourceType == 'xhr') {
@@ -137,7 +146,11 @@ export class InstagramAPI {
       });
 
     } else {
-      
+      const userData = this.getUserData(user);
+      await this.page.setCookie(...userData.cookies);
+      await this.page.goto(this.profileURL + userData.username, {
+        waitUntil: "networkidle2",
+      });
     }
   }
 
