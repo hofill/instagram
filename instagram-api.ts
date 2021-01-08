@@ -1,8 +1,10 @@
 import * as puppeteer from 'puppeteer';
+
 const fs = require('fs');
 import { UserData } from "./src/assets/InstagramUser";
 import * as path from 'path';
 import * as electron from "electron";
+import * as https from "https";
 
 const pup = require("puppeteer-extra");
 const puppeteer_stealth = require("puppeteer-extra-plugin-stealth");
@@ -54,8 +56,8 @@ export class InstagramAPI {
   }
 
   getUserData(username: string): UserData {
-    for(const currentUser of this.readUsers()) {
-      if(currentUser.username == username) {
+    for (const currentUser of this.readUsers()) {
+      if (currentUser.username == username) {
         return currentUser;
       }
     }
@@ -83,20 +85,26 @@ export class InstagramAPI {
     this.page = await this.browser.newPage();
   }
 
-  // async isLoggedIn(name: string): Promise<boolean> {
-  //   // const userDataPath = (electron.app || electron.remote.app).getPath('userData');
-  //
-  //   return true;
-  // }
+  getFollowers(followers_id: number) {
+    const browserOptionsFollowers = {
+      header: {
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_6) ' +
+          'AppleWebKit/605.1.15 (KHTML, like Gecko) ' +
+          'Version/14.0.2 Safari/605.1.15'
+      }
+    }
 
-  async login(username: string, password: string, isLoggedIn = false, user = null): Promise<boolean> {
+    https.get(browserOptionsFollowers)
+  }
+
+  // TODO: regenerate login token (cookies) but don't remove follower data
+  async login(username: string, password: string, isSavedLogin = false, user = null): Promise<boolean> {
     // not needed, i just love objects
     const loginData = {
       username: username,
       password: password
     };
-    // await this.page.setCookie(...cookiesGiven);
-    // await this.page.reload();
+
     if (!this.page) {
       console.log("starting puppeteer");
       await this.startPuppeteer();
@@ -105,7 +113,7 @@ export class InstagramAPI {
         return false;
       }
     }
-    if (!isLoggedIn) {
+    if (!isSavedLogin) {
       await this.page.goto(this.loginURL, {
         waitUntil: "networkidle2",
       });
@@ -135,15 +143,6 @@ export class InstagramAPI {
       const regexUsername = /<img alt="([a-z0-9_\-.]{2,30})'s profile picture"/g;
       const pageUsername = regexUsername.exec(pageData);
       await this.page.goto("https://instagram.com/" + pageUsername[1]);
-
-      // const userData = new UserData(pageUsername[1], await this.page.cookies(), null);
-
-      this.page.on('response', async (response) => {
-        // if (response.resourceType == 'xhr') {
-        console.log(await response.text());
-        // }
-
-      });
 
     } else {
       const userData = this.getUserData(user);
