@@ -42,6 +42,7 @@ var fs = require('fs');
 var InstagramUser_1 = require("./src/assets/InstagramUser");
 var path = require("path");
 var electron = require("electron");
+var https = require("https");
 var pup = require("puppeteer-extra");
 var puppeteer_stealth = require("puppeteer-extra-plugin-stealth");
 var InstagramAPI = /** @class */ (function () {
@@ -112,6 +113,14 @@ var InstagramAPI = /** @class */ (function () {
         }
         return true;
     };
+    InstagramAPI.prototype.getUserId = function (cookies) {
+        for (var _i = 0, cookies_1 = cookies; _i < cookies_1.length; _i++) {
+            var cookie = cookies_1[_i];
+            if (cookie.name == "ds_user_id") {
+                return cookie.value;
+            }
+        }
+    };
     InstagramAPI.prototype.startPuppeteer = function () {
         return __awaiter(this, void 0, void 0, function () {
             var _a, _b;
@@ -133,18 +142,43 @@ var InstagramAPI = /** @class */ (function () {
             });
         });
     };
-    // async isLoggedIn(name: string): Promise<boolean> {
-    //   // const userDataPath = (electron.app || electron.remote.app).getPath('userData');
-    //
-    //   return true;
-    // }
-    InstagramAPI.prototype.login = function (username, password, isLoggedIn, user) {
-        if (isLoggedIn === void 0) { isLoggedIn = false; }
+    InstagramAPI.prototype.getFollowers = function (followers_id, cookies) {
+        var pathLink = "/graphql/query/?query_hash=c76146de99bb02f6415203be841dd25a&variables=";
+        var jsonPath = { "id": followers_id, "include_reel": false, "fetch_mutual": false, "first": 50, "after": "" };
+        pathLink = pathLink + JSON.stringify(jsonPath);
+        var cookieList = "";
+        for (var _i = 0, cookies_2 = cookies; _i < cookies_2.length; _i++) {
+            var cookie = cookies_2[_i];
+            // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
+            cookieList += cookie.name + "=" + cookie.value.toString() + "; ";
+        }
+        var browserOptionsFollowers = {
+            headers: {
+                userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_6) ' +
+                    'AppleWebKit/605.1.15 (KHTML, like Gecko) ' +
+                    'Version/14.0.2 Safari/605.1.15',
+                cookie: cookieList
+            },
+            hostname: 'www.instagram.com',
+            path: pathLink,
+        };
+        https.get(browserOptionsFollowers, function (res) {
+            var dt = '';
+            res.on('data', function (d) {
+                dt += d;
+            });
+            res.on('end', function () {
+                console.log(dt);
+            });
+        });
+    };
+    // TODO: regenerate login token (cookies) but don't remove follower data
+    InstagramAPI.prototype.login = function (username, password, isSavedLogin, user) {
+        if (isSavedLogin === void 0) { isSavedLogin = false; }
         if (user === void 0) { user = null; }
         return __awaiter(this, void 0, void 0, function () {
             var loginData, cookieButton, loginButton, err_1, pageData, regexUsername, pageUsername, userData;
             var _a;
-            var _this = this;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
@@ -163,7 +197,7 @@ var InstagramAPI = /** @class */ (function () {
                         }
                         _b.label = 2;
                     case 2:
-                        if (!!isLoggedIn) return [3 /*break*/, 18];
+                        if (!!isSavedLogin) return [3 /*break*/, 18];
                         return [4 /*yield*/, this.page.goto(this.loginURL, {
                                 waitUntil: "networkidle2",
                             })];
@@ -213,22 +247,6 @@ var InstagramAPI = /** @class */ (function () {
                         return [4 /*yield*/, this.page.goto("https://instagram.com/" + pageUsername[1])];
                     case 17:
                         _b.sent();
-                        // const userData = new UserData(pageUsername[1], await this.page.cookies(), null);
-                        this.page.on('response', function (response) { return __awaiter(_this, void 0, void 0, function () {
-                            var _a, _b;
-                            return __generator(this, function (_c) {
-                                switch (_c.label) {
-                                    case 0:
-                                        // if (response.resourceType == 'xhr') {
-                                        _b = (_a = console).log;
-                                        return [4 /*yield*/, response.text()];
-                                    case 1:
-                                        // if (response.resourceType == 'xhr') {
-                                        _b.apply(_a, [_c.sent()]);
-                                        return [2 /*return*/];
-                                }
-                            });
-                        }); });
                         return [3 /*break*/, 21];
                     case 18:
                         userData = this.getUserData(user);
@@ -240,6 +258,7 @@ var InstagramAPI = /** @class */ (function () {
                             })];
                     case 20:
                         _b.sent();
+                        this.getFollowers(this.getUserId(userData.cookies), userData.cookies);
                         _b.label = 21;
                     case 21: return [2 /*return*/];
                 }

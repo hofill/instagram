@@ -78,6 +78,14 @@ export class InstagramAPI {
     return true;
   }
 
+  getUserId(cookies): number {
+    for(const cookie of cookies) {
+      if(cookie.name == "ds_user_id") {
+        return cookie.value;
+      }
+    }
+  }
+
   async startPuppeteer(): Promise<void> {
     pup.use(puppeteer_stealth());
     this.browserOptions.executablePath = puppeteer.executablePath();
@@ -85,16 +93,36 @@ export class InstagramAPI {
     this.page = await this.browser.newPage();
   }
 
-  getFollowers(followers_id: number) {
-    const browserOptionsFollowers = {
-      header: {
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_6) ' +
-          'AppleWebKit/605.1.15 (KHTML, like Gecko) ' +
-          'Version/14.0.2 Safari/605.1.15'
-      }
+  getFollowers(followers_id: number, cookies) {
+    let pathLink = "/graphql/query/?query_hash=c76146de99bb02f6415203be841dd25a&variables=";
+    const jsonPath = { "id": followers_id, "include_reel": false, "fetch_mutual": false, "first": 50, "after": "" };
+    pathLink = pathLink + JSON.stringify(jsonPath);
+    let cookieList = "";
+    for(const cookie of cookies) {
+      // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
+      cookieList += cookie.name + "=" + cookie.value.toString() + "; ";
     }
+    const browserOptionsFollowers = {
+      headers: {
+        userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_6) ' +
+          'AppleWebKit/605.1.15 (KHTML, like Gecko) ' +
+          'Version/14.0.2 Safari/605.1.15',
+        cookie: cookieList
+      },
+      hostname: 'www.instagram.com',
+      path: pathLink,
+    };
 
-    https.get(browserOptionsFollowers)
+    https.get(browserOptionsFollowers, (res) => {
+      let dt = '';
+      res.on('data', d => {
+        dt += d;
+      });
+
+      res.on('end', ()=> {
+        console.log(dt);
+      });
+    });
   }
 
   // TODO: regenerate login token (cookies) but don't remove follower data
@@ -150,6 +178,8 @@ export class InstagramAPI {
       await this.page.goto(this.profileURL + userData.username, {
         waitUntil: "networkidle2",
       });
+
+      this.getFollowers(this.getUserId(userData.cookies), userData.cookies);
     }
   }
 
