@@ -5,6 +5,7 @@ import { UserData } from "./src/assets/InstagramUser";
 import * as path from 'path';
 import * as electron from "electron";
 import * as https from "https";
+import { SetCookie } from "puppeteer";
 
 const pup = require("puppeteer-extra");
 const puppeteer_stealth = require("puppeteer-extra-plugin-stealth");
@@ -78,10 +79,10 @@ export class InstagramAPI {
     return true;
   }
 
-  getUserId(cookies): number {
-    for(const cookie of cookies) {
-      if(cookie.name == "ds_user_id") {
-        return cookie.value;
+  getUserId(cookies: Record<string, unknown>[]): number {
+    for (const cookie of cookies) {
+      if (cookie.name == "ds_user_id") {
+        return <number>cookie.value;
       }
     }
   }
@@ -93,41 +94,80 @@ export class InstagramAPI {
     this.page = await this.browser.newPage();
   }
 
-  getFollowers(followers_id: number, cookies) {
-    let pathLink = "/graphql/query/?query_hash=c76146de99bb02f6415203be841dd25a&variables=";
-    const jsonPath = { "id": followers_id, "include_reel": false, "fetch_mutual": false, "first": 50, "after": "" };
-    pathLink = pathLink + JSON.stringify(jsonPath);
+  hasSetFollowers(username: string): boolean {
+    const userData = this.getUserData(username);
+    return userData.followers != null;
+  }
+
+  cookiesInRequestForm(cookies: Record<string, unknown>[]): string {
     let cookieList = "";
-    for(const cookie of cookies) {
-      // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
+    for (const cookie of cookies) {
       cookieList += cookie.name + "=" + cookie.value.toString() + "; ";
     }
-    const browserOptionsFollowers = {
-      headers: {
-        userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_6) ' +
-          'AppleWebKit/605.1.15 (KHTML, like Gecko) ' +
-          'Version/14.0.2 Safari/605.1.15',
-        cookie: cookieList
-      },
-      hostname: 'www.instagram.com',
-      path: pathLink,
-    };
+    return cookieList;
+  }
 
-    https.get(browserOptionsFollowers, (res) => {
-      let dt = '';
-      res.on('data', d => {
-        dt += d;
-      });
+  async getFollowers(followers_id: number, cookies: Record<string, unknown>[]): Promise<object> {
+    const cookieList = this.cookiesInRequestForm(cookies);
+    let moreFollowers = true;
+    let after = "";
+    const followers = [];
+    while (moreFollowers) {
+      let pathLink = "/graphql/query/?query_hash=c76146de99bb02f6415203be841dd25a&variables=";
+      const jsonPath = {
+        "id": followers_id,
+        "include_reel": false,
+        "fetch_mutual": false,
+        "first": 49,
+        "after": after
+      };
+      pathLink = pathLink + JSON.stringify(jsonPath);
+      const browserOptionsFollowers = {
+        headers: {
+          userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_6) ' +
+            'AppleWebKit/605.1.15 (KHTML, like Gecko) ' +
+            'Version/14.0.2 Safari/605.1.15',
+          cookie: cookieList
+        },
+        hostname: 'www.instagram.com',
+        path: pathLink,
+      };
 
-      res.on('end', ()=> {
-        console.log(dt);
+      // let dt = '';
+      const getData = () => new Promise((resolve) => {
+        let dt = '';
+        https.get(browserOptionsFollowers, (res) => {
+          res.on('data', d => {
+            dt += d;
+          });
+
+          res.on('end', () => {
+            // console.log(dt);
+            resolve(dt);
+          });
+        });
       });
-    });
+      const followersPage = JSON.parse(<string>await getData());
+      // console.log(followersPage);
+      if (followersPage.data.user.edge_followed_by.page_info.has_next_page == true) {
+        after = followersPage.data.user.edge_followed_by.page_info.end_cursor.toString();
+        console.log(after);
+      } else {
+        moreFollowers = false;
+      }
+      for (const node of followersPage.data.user.edge_followed_by.edges) {
+        followers.push(node);
+      }
+    }
+    for (const follower of followers) {
+      console.log(follower);
+    }
+    return followers;
   }
 
   // TODO: regenerate login token (cookies) but don't remove follower data
+  // TODO: remove puppeteer, use requests
   async login(username: string, password: string, isSavedLogin = false, user = null): Promise<boolean> {
-    // not needed, i just love objects
     const loginData = {
       username: username,
       password: password
@@ -179,7 +219,7 @@ export class InstagramAPI {
         waitUntil: "networkidle2",
       });
 
-      this.getFollowers(this.getUserId(userData.cookies), userData.cookies);
+      await this.getFollowers(this.getUserId(userData.cookies), userData.cookies);
     }
   }
 

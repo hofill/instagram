@@ -32,6 +32,22 @@
         "@angular-eslint/eslint-plugin"
       ],
       "rules": {
+        "@typescript-eslint/ban-types": ["error",
+          {
+            "types": {
+              "String": false,
+              "Boolean": false,
+              "Number": false,
+              "Symbol": false,
+              "{}": false,
+              "Object": false,
+              "object": false,
+              "Function": false
+            },
+            "extendDefaults": true
+          }
+        ],
+        "@typescript-eslint/restrict-plus-operands": 0,
         "@typescript-eslint/indent": [
           "error", 2, {
             "SwitchCase": 1,
