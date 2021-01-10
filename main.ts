@@ -25,18 +25,6 @@ function createWindow(): BrowserWindow {
     }
   });
 
-  win = new BrowserWindow({
-    width: 1120,
-    height: 630,
-    show: false,
-    webPreferences: {
-      nodeIntegration: true,
-      allowRunningInsecureContent: serve,
-      contextIsolation: false,  // false if you want to run 2e2 test with Spectron
-      enableRemoteModule : true // true if you want to run 2e2 test  with Spectron or use remote module in renderer context (ie. Angular)
-    },
-  });
-
   loginWindow.resizable = false;
 
   if (serve) {
@@ -71,17 +59,40 @@ function createWindow(): BrowserWindow {
 const api = new InstagramAPI();
 
 ipcMain.handle('login_attempt', async (event, args) => {
+  win = new BrowserWindow({
+    width: 1120,
+    height: 630,
+    show: false,
+    webPreferences: {
+      nodeIntegration: true,
+      allowRunningInsecureContent: serve,
+      contextIsolation: false,  // false if you want to run 2e2 test with Spectron
+      enableRemoteModule : true // true if you want to run 2e2 test  with Spectron or use remote module in renderer context (ie. Angular)
+    },
+  });
   win.resizable = false;
-  win.show();
   win.loadURL('http://localhost:4200/');
   loginWindow.close();
-  return await api.login(args.email, args.password, false, null);
+  // return await api.login(args.email, args.password, false, null);
+  return await api.login("bemveurimanele", "manelemanele@");
 });
 
 ipcMain.handle('login_saved_account', async (event, args) => {
-  await api.login(null, null, true, args.username);
-  win.show();
+  win = new BrowserWindow({
+    width: 1120,
+    height: 630,
+    show: false,
+    webPreferences: {
+      nodeIntegration: true,
+      allowRunningInsecureContent: serve,
+      contextIsolation: false,  // false if you want to run 2e2 test with Spectron
+      enableRemoteModule : true // true if you want to run 2e2 test  with Spectron or use remote module in renderer context (ie. Angular)
+    },
+  });
+  win.resizable = false;
+  win.loadURL('http://localhost:4200/');
   loginWindow.close();
+  await api.login("asd", "asd");
 });
 
 ipcMain.handle('get_accounts',  () => {

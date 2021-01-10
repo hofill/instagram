@@ -5,7 +5,6 @@ import { UserData } from "./src/assets/InstagramUser";
 import * as path from 'path';
 import * as electron from "electron";
 import * as https from "https";
-import { SetCookie } from "puppeteer";
 
 const pup = require("puppeteer-extra");
 const puppeteer_stealth = require("puppeteer-extra-plugin-stealth");
@@ -161,7 +160,7 @@ export class InstagramAPI {
 
   // TODO: regenerate login token (cookies) but don't remove follower data
   // TODO: remove puppeteer, use requests
-  async login(username: string, password: string, isSavedLogin = false, user = null): Promise<boolean> {
+  async login(username: string, password: string): Promise<boolean> {
     const loginData = {
       username: username,
       password: password
@@ -175,46 +174,36 @@ export class InstagramAPI {
         return false;
       }
     }
-    if (!isSavedLogin) {
-      await this.page.goto(this.loginURL, {
-        waitUntil: "networkidle2",
-      });
+    await this.page.goto(this.loginURL, {
+      waitUntil: "networkidle2",
+    });
 
-      await this.page.waitForXPath("//button[.='Accept']");
+    await this.page.waitForXPath("//button[.='Accept']");
 
-      const cookieButton = await this.page.$x("//button[.='Accept']");
-      cookieButton[0].click();
+    const cookieButton = await this.page.$x("//button[.='Accept']");
+    cookieButton[0].click();
 
-      await this.page.waitForTimeout(1000);
+    await this.page.waitForTimeout(1000);
 
-      await this.page.waitForSelector("input[name=username]");
-      await this.page.type("input[name=username]", loginData.username);
+    await this.page.waitForSelector("input[name=username]");
+    await this.page.type("input[name=username]", loginData.username);
 
-      await this.page.waitForTimeout(100);
-      await this.page.type("input[name=password]", loginData.password);
+    await this.page.waitForTimeout(100);
+    await this.page.type("input[name=password]", loginData.password);
 
-      const loginButton = await this.page.$x("//button[@type='submit']");
-      loginButton[0].click();
+    const loginButton = await this.page.$x("//button[@type='submit']");
+    loginButton[0].click();
 
-      try {
-        await this.page.waitForXPath("//img[@data-testid='user-avatar']");
-      } catch (err) {
-        return false;
-      }
-      const pageData = await this.page.content();
-      const regexUsername = /<img alt="([a-z0-9_\-.]{2,30})'s profile picture"/g;
-      const pageUsername = regexUsername.exec(pageData);
-      await this.page.goto("https://instagram.com/" + pageUsername[1]);
-
-    } else {
-      const userData = this.getUserData(user);
-      await this.page.setCookie(...userData.cookies);
-      await this.page.goto(this.profileURL + userData.username, {
-        waitUntil: "networkidle2",
-      });
-
-      await this.getFollowers(this.getUserId(userData.cookies), userData.cookies);
+    try {
+      await this.page.waitForXPath("//img[@data-testid='user-avatar']");
+    } catch (err) {
+      return false;
     }
+    const pageData = await this.page.content();
+    const regexUsername = /<img alt="([a-z0-9_\-.]{2,30})'s profile picture"/g;
+    const pageUsername = regexUsername.exec(pageData);
+    await this.page.goto("https://instagram.com/" + pageUsername[1]);
+
   }
 
 
