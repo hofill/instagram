@@ -133,7 +133,6 @@ export class InstagramAPI {
         path: pathLink,
       };
 
-      // let dt = '';
       const getData = () => new Promise((resolve) => {
         let dt = '';
         https.get(browserOptionsFollowers, (res) => {
@@ -142,13 +141,11 @@ export class InstagramAPI {
           });
 
           res.on('end', () => {
-            // console.log(dt);
             resolve(dt);
           });
         });
       });
       const followersPage = JSON.parse(<string>await getData());
-      // console.log(followersPage);
       if (followersPage.data.user.edge_followed_by.page_info.has_next_page == true) {
         after = followersPage.data.user.edge_followed_by.page_info.end_cursor.toString();
         console.log(after);
@@ -158,9 +155,6 @@ export class InstagramAPI {
       for (const node of followersPage.data.user.edge_followed_by.edges) {
         followers.push(node);
       }
-    }
-    for (const follower of followers) {
-      console.log(follower);
     }
     return followers;
   }

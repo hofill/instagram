@@ -3,7 +3,8 @@
     <div class="wrap-form">
       <h3 style="display: block; text-align: center; margin-bottom: 25px;">Select your account</h3>
       <div class="accounts">
-        <app-account *ngFor="let account of accounts; let i = index" [account]="account" [index]="i"></app-account>
+        <app-account *ngFor="let account of accounts; let i = index" [account]="account" [index]="i"
+                     (click)="loginAccount(account)"></app-account>
       </div>
       <div style="text-align: center; margin-top: 25px">
         <span style="font-size: 14px">

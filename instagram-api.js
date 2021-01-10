@@ -142,17 +142,25 @@ var InstagramAPI = /** @class */ (function () {
             });
         });
     };
+    InstagramAPI.prototype.hasSetFollowers = function (username) {
+        var userData = this.getUserData(username);
+        return userData.followers != null;
+    };
+    InstagramAPI.prototype.cookiesInRequestForm = function (cookies) {
+        var cookieList = "";
+        for (var _i = 0, cookies_2 = cookies; _i < cookies_2.length; _i++) {
+            var cookie = cookies_2[_i];
+            cookieList += cookie.name + "=" + cookie.value.toString() + "; ";
+        }
+        return cookieList;
+    };
     InstagramAPI.prototype.getFollowers = function (followers_id, cookies) {
         return __awaiter(this, void 0, void 0, function () {
-            var cookieList, _i, cookies_2, cookie, moreFollowers, after, followers, _loop_1, _a, followers_1, follower;
-            return __generator(this, function (_b) {
-                switch (_b.label) {
+            var cookieList, moreFollowers, after, followers, _loop_1;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
                     case 0:
-                        cookieList = "";
-                        for (_i = 0, cookies_2 = cookies; _i < cookies_2.length; _i++) {
-                            cookie = cookies_2[_i];
-                            cookieList += cookie.name + "=" + cookie.value.toString() + "; ";
-                        }
+                        cookieList = this.cookiesInRequestForm(cookies);
                         moreFollowers = true;
                         after = "";
                         followers = [];
@@ -162,7 +170,13 @@ var InstagramAPI = /** @class */ (function () {
                                 switch (_d.label) {
                                     case 0:
                                         pathLink = "/graphql/query/?query_hash=c76146de99bb02f6415203be841dd25a&variables=";
-                                        jsonPath = { "id": followers_id, "include_reel": false, "fetch_mutual": false, "first": 49, "after": after };
+                                        jsonPath = {
+                                            "id": followers_id,
+                                            "include_reel": false,
+                                            "fetch_mutual": false,
+                                            "first": 49,
+                                            "after": after
+                                        };
                                         pathLink = pathLink + JSON.stringify(jsonPath);
                                         browserOptionsFollowers = {
                                             headers: {
@@ -181,7 +195,6 @@ var InstagramAPI = /** @class */ (function () {
                                                     dt += d;
                                                 });
                                                 res.on('end', function () {
-                                                    // console.log(dt);
                                                     resolve(dt);
                                                 });
                                             });
@@ -190,7 +203,6 @@ var InstagramAPI = /** @class */ (function () {
                                         return [4 /*yield*/, getData()];
                                     case 1:
                                         followersPage = _b.apply(_a, [_d.sent()]);
-                                        // console.log(followersPage);
                                         if (followersPage.data.user.edge_followed_by.page_info.has_next_page == true) {
                                             after = followersPage.data.user.edge_followed_by.page_info.end_cursor.toString();
                                             console.log(after);
@@ -206,19 +218,14 @@ var InstagramAPI = /** @class */ (function () {
                                 }
                             });
                         };
-                        _b.label = 1;
+                        _a.label = 1;
                     case 1:
                         if (!moreFollowers) return [3 /*break*/, 3];
                         return [5 /*yield**/, _loop_1()];
                     case 2:
-                        _b.sent();
+                        _a.sent();
                         return [3 /*break*/, 1];
-                    case 3:
-                        for (_a = 0, followers_1 = followers; _a < followers_1.length; _a++) {
-                            follower = followers_1[_a];
-                            console.log(follower);
-                        }
-                        return [2 /*return*/, followers];
+                    case 3: return [2 /*return*/, followers];
                 }
             });
         });

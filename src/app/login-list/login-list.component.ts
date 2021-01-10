@@ -1,4 +1,12 @@
 import { Component, OnInit } from '@angular/core';
+import { UserData } from "../../assets/InstagramUser";
+declare let window: Window;
+declare global {
+  interface Window {
+    process: any;
+    require: any;
+  }
+}
 
 @Component({
   selector: 'app-login-list',
@@ -8,19 +16,23 @@ import { Component, OnInit } from '@angular/core';
 export class LoginListComponent implements OnInit {
 
   accounts;
+  ipcRenderer = window.require('electron').ipcRenderer;
 
   constructor() { }
 
   ngOnInit(): void {
-    this.getAccounts();
+    this.getAccounts().then();
     console.log(this.accounts);
   }
 
   async getAccounts(): Promise<void> {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
-    const ipcRenderer = window.require('electron').ipcRenderer;
-    this.accounts = await ipcRenderer.invoke('get_accounts');
+
+    this.accounts = await this.ipcRenderer.invoke('get_accounts');
   }
 
+  async loginAccount(account: UserData): Promise<void> {
+    await this.ipcRenderer.invoke('login_saved_account', account);
+  }
 }
