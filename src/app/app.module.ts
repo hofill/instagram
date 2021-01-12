@@ -9,12 +9,13 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { LoginComponent } from './login/login.component';
 import { MainComponent } from './main/main.component';
-import { LoginListComponent } from './login-list/login-list.component';
-import { AccountComponent } from './login-list/account/account.component';
+import { LoginListComponent } from './login/login-list/login-list.component';
+import { AccountComponent } from './login/login-list/account/account.component';
+import { NewLoginComponent } from './login/new-login/new-login.component';
 
 
 @NgModule({
-  declarations: [AppComponent, LoginComponent, MainComponent, LoginListComponent, AccountComponent],
+  declarations: [AppComponent, LoginComponent, MainComponent, LoginListComponent, AccountComponent, NewLoginComponent],
   imports: [
     BrowserModule,
     FormsModule,

@@ -6,6 +6,7 @@
         <app-account *ngFor="let account of accounts; let i = index" [account]="account" [index]="i"
                      (click)="loginAccount(account)"></app-account>
       </div>
+
       <div style="text-align: center; margin-top: 25px">
         <span style="font-size: 14px">
           <a routerLink="/login">Back</a>

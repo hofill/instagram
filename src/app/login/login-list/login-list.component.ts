@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { UserData } from "../../assets/InstagramUser";
+import { UserData } from "../../../assets/InstagramUser";
 declare let window: Window;
 declare global {
   interface Window {
@@ -26,9 +26,6 @@ export class LoginListComponent implements OnInit {
   }
 
   async getAccounts(): Promise<void> {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-
     this.accounts = await this.ipcRenderer.invoke('get_accounts');
   }
 

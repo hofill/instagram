@@ -159,7 +159,7 @@ export class InstagramAPI {
   }
 
   // TODO: regenerate login token (cookies) but don't remove follower data
-  // TODO: remove puppeteer, use requests
+  // TODO: remove puppeteer, use instagram login
   async login(username: string, password: string): Promise<boolean> {
     const loginData = {
       username: username,

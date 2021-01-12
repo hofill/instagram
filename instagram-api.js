@@ -231,15 +231,12 @@ var InstagramAPI = /** @class */ (function () {
         });
     };
     // TODO: regenerate login token (cookies) but don't remove follower data
-    // TODO: remove puppeteer, use requests
-    InstagramAPI.prototype.login = function (username, password, isSavedLogin, user) {
-        if (isSavedLogin === void 0) { isSavedLogin = false; }
-        if (user === void 0) { user = null; }
+    // TODO: remove puppeteer, use instagram login
+    InstagramAPI.prototype.login = function (username, password) {
         return __awaiter(this, void 0, void 0, function () {
-            var loginData, cookieButton, loginButton, err_1, pageData, regexUsername, pageUsername, userData;
-            var _a;
-            return __generator(this, function (_b) {
-                switch (_b.label) {
+            var loginData, cookieButton, loginButton, err_1, pageData, regexUsername, pageUsername;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
                     case 0:
                         loginData = {
                             username: username,
@@ -249,79 +246,62 @@ var InstagramAPI = /** @class */ (function () {
                         console.log("starting puppeteer");
                         return [4 /*yield*/, this.startPuppeteer()];
                     case 1:
-                        _b.sent();
+                        _a.sent();
                         if (!this.page) {
                             console.log("failed to load puppeteer");
                             return [2 /*return*/, false];
                         }
-                        _b.label = 2;
-                    case 2:
-                        if (!!isSavedLogin) return [3 /*break*/, 18];
-                        return [4 /*yield*/, this.page.goto(this.loginURL, {
-                                waitUntil: "networkidle2",
-                            })];
+                        _a.label = 2;
+                    case 2: return [4 /*yield*/, this.page.goto(this.loginURL, {
+                            waitUntil: "networkidle2",
+                        })];
                     case 3:
-                        _b.sent();
+                        _a.sent();
                         return [4 /*yield*/, this.page.waitForXPath("//button[.='Accept']")];
                     case 4:
-                        _b.sent();
+                        _a.sent();
                         return [4 /*yield*/, this.page.$x("//button[.='Accept']")];
                     case 5:
-                        cookieButton = _b.sent();
+                        cookieButton = _a.sent();
                         cookieButton[0].click();
                         return [4 /*yield*/, this.page.waitForTimeout(1000)];
                     case 6:
-                        _b.sent();
+                        _a.sent();
                         return [4 /*yield*/, this.page.waitForSelector("input[name=username]")];
                     case 7:
-                        _b.sent();
+                        _a.sent();
                         return [4 /*yield*/, this.page.type("input[name=username]", loginData.username)];
                     case 8:
-                        _b.sent();
+                        _a.sent();
                         return [4 /*yield*/, this.page.waitForTimeout(100)];
                     case 9:
-                        _b.sent();
+                        _a.sent();
                         return [4 /*yield*/, this.page.type("input[name=password]", loginData.password)];
                     case 10:
-                        _b.sent();
+                        _a.sent();
                         return [4 /*yield*/, this.page.$x("//button[@type='submit']")];
                     case 11:
-                        loginButton = _b.sent();
+                        loginButton = _a.sent();
                         loginButton[0].click();
-                        _b.label = 12;
+                        _a.label = 12;
                     case 12:
-                        _b.trys.push([12, 14, , 15]);
+                        _a.trys.push([12, 14, , 15]);
                         return [4 /*yield*/, this.page.waitForXPath("//img[@data-testid='user-avatar']")];
                     case 13:
-                        _b.sent();
+                        _a.sent();
                         return [3 /*break*/, 15];
                     case 14:
-                        err_1 = _b.sent();
+                        err_1 = _a.sent();
                         return [2 /*return*/, false];
                     case 15: return [4 /*yield*/, this.page.content()];
                     case 16:
-                        pageData = _b.sent();
+                        pageData = _a.sent();
                         regexUsername = /<img alt="([a-z0-9_\-.]{2,30})'s profile picture"/g;
                         pageUsername = regexUsername.exec(pageData);
                         return [4 /*yield*/, this.page.goto("https://instagram.com/" + pageUsername[1])];
                     case 17:
-                        _b.sent();
-                        return [3 /*break*/, 22];
-                    case 18:
-                        userData = this.getUserData(user);
-                        return [4 /*yield*/, (_a = this.page).setCookie.apply(_a, userData.cookies)];
-                    case 19:
-                        _b.sent();
-                        return [4 /*yield*/, this.page.goto(this.profileURL + userData.username, {
-                                waitUntil: "networkidle2",
-                            })];
-                    case 20:
-                        _b.sent();
-                        return [4 /*yield*/, this.getFollowers(this.getUserId(userData.cookies), userData.cookies)];
-                    case 21:
-                        _b.sent();
-                        _b.label = 22;
-                    case 22: return [2 /*return*/];
+                        _a.sent();
+                        return [2 /*return*/];
                 }
             });
         });
